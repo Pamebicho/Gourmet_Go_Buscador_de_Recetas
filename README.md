@@ -1,4 +1,5 @@
-🚀 GourmetGo
+## 🚀 GourmetGo
+
 SPA para búsqueda de recetas por ingrediente, con consumo de API (TheMealDB), renderizado dinámico sin recarga y mejoras UX como animaciones y skeleton loaders.
 
 ## Descripción
