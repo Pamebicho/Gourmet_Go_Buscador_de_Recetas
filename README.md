@@ -1,10 +1,6 @@
-GourmetGo — Buscador de Recetas
-![GourmetGo Hero](/assets/img/gourmet_go_home.png)
-![GourmetGo](/assets/img/gourmet_go_recetas.png)
+## 🚀 GourmetGo
 
-> Buscador de recetas internacionales por ingrediente, con traducción automático español → inglés e integración en tiempo real con TheMealDB.
-
-[![Ver Demo](https://img.shields.io/badge/Ver%20Demo-Online-green?style=for-the-badge)](https://pamebicho.github.io/Gourmet_Go_Buscador_de_Recetas/)
+SPA para búsqueda de recetas por ingrediente, con consumo de API (TheMealDB), renderizado dinámico sin recarga y mejoras UX como animaciones y skeleton loaders.
 
 ## Descripción
 
@@ -13,6 +9,13 @@ El proyecto fue desarrollado en dos sprints:
 
 Sprint 1 Maqueta estática, diseño visual y responsividad con Bootstrap 5
 Sprint 2 Conexión a API, async/await, manejo de errores y mejoras de UX
+
+> Buscador de recetas internacionales por ingrediente, con traducción automático español → inglés e integración en tiempo real con TheMealDB.
+
+[![Ver Demo](https://img.shields.io/badge/Ver%20Demo-Online-green?style=for-the-badge)](https://pamebicho.github.io/Gourmet_Go_Buscador_de_Recetas/)
+
+![GourmetGo Hero](/assets/img/gourmet_go_home.png)
+![GourmetGo](/assets/img/gourmet_go_recetas.png)
 
 ---
 
@@ -51,7 +54,7 @@ Este proyecto es 100% estático: no requiere Node.js, npm ni ningún servidor de
 
 ```bash
 # 1. Clona el repositorio
-git clone https://github.com/TU_USUARIO/TU_REPO.git
+git clone https://github.com/Pamebicho/Gourmet_Go_Buscador_de_Recetas.git
 
 # 2. Entra a la carpeta
 cd Gourmet_Go_Buscador_de_Recetas
