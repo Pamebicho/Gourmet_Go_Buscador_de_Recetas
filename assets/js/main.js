@@ -1,13 +1,12 @@
-// Gourmet Go - Sprint 2 (M4)
-// Objetivo: conectar la maqueta a TheMealDB, buscar por ingrediente,
-// manejar asincronía con fetch + async/await, y renderizar resultados en el DOM.
+// =============================================
+// Gourmet Go Mejoras v2:
+// =============================================
 
-// 1) ENDPOINT (URL de la API)//
+// ── ENDPOINTS ──────────────────────────────
 const FILTER_URL = "https://www.themealdb.com/api/json/v1/1/filter.php?i=";
+const SUGGEST_URL = "https://www.themealdb.com/api/json/v1/1/list.php?i=list";
 
-// 2) DICCIONARIO ES -> EN//
-// traducir/normalizar lo que escribe el usuario y buscar en inglés.
-// Puedes ampliar este diccionario con más ingredientes.
+// ── DICCIONARIO ES → EN ─────────────────────
 const ING_ES_EN = {
   // Proteínas
   pollo: "chicken",
@@ -24,8 +23,9 @@ const ING_ES_EN = {
   atun: "tuna",
   camaron: "prawns",
   camarones: "prawns",
-
-  // Base / carbohidratos
+  cordero: "lamb",
+  pavo: "turkey",
+  // Carbohidratos
   arroz: "rice",
   pasta: "pasta",
   fideos: "pasta",
@@ -33,14 +33,12 @@ const ING_ES_EN = {
   pan: "bread",
   papa: "potato",
   papas: "potato",
-
   // Lácteos
   queso: "cheese",
   leche: "milk",
   crema: "cream",
   mantequilla: "butter",
   yogur: "yogurt",
-
   // Verduras / aromáticos
   tomate: "tomato",
   tomates: "tomato",
@@ -53,36 +51,57 @@ const ING_ES_EN = {
   palta: "avocado",
   aguacate: "avocado",
   limon: "lemon",
+  limon: "lemon",
   perejil: "parsley",
   albahaca: "basil",
   cilantro: "coriander",
-
-  // Otros comunes
+  espinaca: "spinach",
+  brocoli: "broccoli",
+  // Otros
   aceite: "oil",
   azucar: "sugar",
   harina: "flour",
   sal: "salt",
   pimienta: "pepper",
   chocolate: "chocolate",
+  huevo: "egg",
+  huevos: "egg",
 };
 
-// Normaliza texto: quita tildes y lo deja en minúscula
-const normalizar = (texto) =>
-  texto
+// ── UTILIDADES ──────────────────────────────
+
+/** Quita tildes y pasa a minúscula */
+const normalizar = (t) =>
+  t
     .trim()
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
-// Convierte lo que escribe el usuario en el ingrediente que entiende TheMealDB
-// - Si existe en diccionario: traduce a inglés
-// - Si no existe: usa lo escrito (por si el usuario ya pone inglés)
-const traducirIngrediente = (entradaUsuario) => {
-  const entrada = normalizar(entradaUsuario);
-  return ING_ES_EN[entrada] || entrada;
+/** Traduce ES→EN o devuelve el texto original */
+const traducirIngrediente = (entrada) => {
+  const n = normalizar(entrada);
+  return ING_ES_EN[n] || n;
 };
 
-// 3) CLASE Receta //
+/** Escapa caracteres peligrosos para insertar en HTML */
+const escapeHTML = (str) =>
+  String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+/** Debounce genérico */
+const debounce = (fn, ms) => {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+};
+
+// ── CLASE Receta ────────────────────────────
 class Receta {
   constructor({ idMeal, strMeal, strMealThumb }) {
     this.id = idMeal;
@@ -90,28 +109,26 @@ class Receta {
     this.imagen = strMealThumb;
   }
 
-  toCardHTML() {
+  toCardHTML(delay = 0) {
+    const nombre = escapeHTML(this.nombre);
+    const imagen = escapeHTML(this.imagen);
+    const link = `https://www.themealdb.com/meal/${escapeHTML(this.id)}`;
+
     return `
       <div class="col-12 col-md-6 col-lg-4">
-        <div class="card recipe-card h-100">
-          <img
-            src="${this.imagen}"
-            class="card-img-top"
-            alt="${this.nombre}"
-          />
+        <div class="card recipe-card h-100 card-anim" style="animation-delay:${delay}ms">
+          <div class="card-img-wrap">
+            <img src="${imagen}" class="card-img-top" alt="${nombre}" loading="lazy" />
+          </div>
           <div class="card-body d-flex flex-column">
-            <h5 class="card-title">${this.nombre}</h5>
-            <p class="text-muted">
-              Resultado obtenido desde TheMealDB según el ingrediente buscado.
-            </p>
-            <span class="badge bg-success mb-3">Resultado</span>
-            <a
-              href="https://www.themealdb.com/meal/${this.id}"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-italy mt-auto"
-            >
+            <span class="card-badge">TheMealDB</span>
+            <h5 class="card-title">${nombre}</h5>
+            <p class="card-desc">Receta obtenida desde TheMealDB según el ingrediente buscado.</p>
+            <a href="${link}" target="_blank" rel="noopener noreferrer" class="btn-card mt-auto">
               Ver receta
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H4.5"/>
+              </svg>
             </a>
           </div>
         </div>
@@ -120,84 +137,135 @@ class Receta {
   }
 }
 
-// 4) DOM + EVENTOS//
+// ── DOM READY ───────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-  // Referencias DOM
   const form = document.getElementById("searchForm");
   const input = document.getElementById("searchInput");
   const resultsRow = document.getElementById("resultsRow");
+  const countEl = document.getElementById("results-count");
+  const datalist = document.getElementById("ingredientsList");
+  const navbar = document.getElementById("navbar");
+  const secRecetas = document.getElementById("recetas");
 
-  // Helpers UI
-  const limpiarResultados = () => {
-    resultsRow.innerHTML = "";
+  // AbortController para cancelar fetches pendientes
+  let abortCtrl = null;
+
+  // ── Navbar sticky on scroll ──────────────
+  window.addEventListener(
+    "scroll",
+    () => {
+      navbar.classList.toggle("scrolled", window.scrollY > 60);
+    },
+    { passive: true },
+  );
+
+  // ── Autocompletado con debounce ──────────
+  const cargarSugerencias = debounce(async () => {
+    try {
+      const res = await fetch(SUGGEST_URL);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.meals) return;
+      datalist.innerHTML = data.meals
+        .map((m) => `<option value="${escapeHTML(m.strIngredient)}">`)
+        .join("");
+    } catch {
+      // Silencioso — el autocompletado es opcional
+    }
+  }, 300);
+
+  cargarSugerencias();
+
+  // ── Helpers UI ───────────────────────────
+  const setCount = (n) => {
+    if (n === null) {
+      countEl.textContent = "";
+      return;
+    }
+    countEl.textContent = `${n} receta${n !== 1 ? "s" : ""} encontrada${n !== 1 ? "s" : ""}`;
   };
 
-  const renderMensaje = (mensaje) => {
-    limpiarResultados();
+  const renderSkeletons = (n = 6) => {
+    resultsRow.innerHTML = Array.from(
+      { length: n },
+      () => `
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="skeleton">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line mid"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line long" style="margin-bottom:1.2rem"></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </div>
+      </div>`,
+    ).join("");
+    setCount(null);
+  };
+
+  const renderMensaje = (html) => {
     resultsRow.innerHTML = `
       <div class="col-12">
-        <div class="alert alert-info mb-0" role="alert">
-          ${mensaje}
-        </div>
-      </div>
-    `;
+        <div class="alert-gourmet">${html}</div>
+      </div>`;
+    setCount(null);
   };
 
   const renderRecetas = (recetas) => {
-    limpiarResultados();
-    resultsRow.innerHTML = recetas.map((r) => r.toCardHTML()).join("");
+    resultsRow.innerHTML = recetas.map((r, i) => r.toCardHTML(i * 50)).join("");
+    setCount(recetas.length);
   };
 
-  // 5) SUBMIT: Buscar recetas (HU-04)//
-  form.addEventListener("submit", async (event) => {
-    // HU-04: prevenir recarga
-    event.preventDefault();
+  // ── Submit ───────────────────────────────
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    // Capturar texto del usuario
-    const textoUsuario = input.value;
-
-    // Traducir ES->EN (o usar tal cual si ya es inglés)
-    const ingrediente = traducirIngrediente(textoUsuario);
-
-    // Validación: vacío
-    if (!ingrediente) {
+    const textoUsuario = input.value.trim();
+    if (!textoUsuario) {
       renderMensaje("Escribe un ingrediente para buscar.");
       return;
     }
 
+    const ingrediente = traducirIngrediente(textoUsuario);
+
+    // Cancelar fetch anterior si aún está pendiente
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+
+    renderSkeletons();
+
     try {
-      // Mensaje de carga
-      renderMensaje("Buscando recetas...");
-
-      // Llamada a la API con fetch + async/await
       const url = `${FILTER_URL}${encodeURIComponent(ingrediente)}`;
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: abortCtrl.signal });
 
-      // fetch no falla solo por HTTP, validamos ok
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
 
-      // HU-06: sin resultados
       if (!data.meals) {
         renderMensaje(
-          `Lo sentimos, no se encontraron recetas para "${textoUsuario}". Intenta con otro ingrediente.`
+          `Sin resultados para <strong>"${escapeHTML(textoUsuario)}"</strong>. Intenta con otro ingrediente.`,
         );
         return;
       }
 
-      // HU-05: destructuring desde el objeto de la API
-      const recetas = data.meals.map((meal) => {
-        const { idMeal, strMeal, strMealThumb } = meal;
-        return new Receta({ idMeal, strMeal, strMealThumb });
-      });
+      const recetas = data.meals.map(
+        ({ idMeal, strMeal, strMealThumb }) =>
+          new Receta({ idMeal, strMeal, strMealThumb }),
+      );
 
-      // HU-05: limpiar anteriores y mostrar nuevos
       renderRecetas(recetas);
+      secRecetas.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     } catch (err) {
-      console.error(err);
+      if (err.name === "AbortError") return; // fetch cancelado, ignorar
+      console.error("[GourmetGo]", err);
       renderMensaje(
-        "Ocurrió un error al buscar recetas. Revisa tu conexión e inténtalo nuevamente."
+        "Error al conectar con la API. Revisa tu conexión e inténtalo nuevamente.",
       );
     }
   });

@@ -1,41 +1,129 @@
-# Gourmet Go - Buscador de Recetas Italianas (Sprint 1)
+GourmetGo — Buscador de Recetas
+![GourmetGo Hero](/assets/img/gourmet_go_home.png)
+![GourmetGo](/assets/img/gourmet_go_recetas.png)
 
-Proyecto desarrollado como parte del **EF-M3 Proyecto Integrador - Sprint 1**.  
-El objetivo de este sprint es construir un **prototipo visual de alta fidelidad** para un buscador de recetas, enfocado en **recetas italianas**, utilizando **Bootstrap 5** y una maquetación completamente responsiva.
+> Buscador de recetas internacionales por ingrediente, con traducción automático español → inglés e integración en tiempo real con TheMealDB.
 
-## 🎯 Objetivo del Sprint 1
+[![Ver Demo](https://img.shields.io/badge/Ver%20Demo-Online-green?style=for-the-badge)](https://pamebicho.github.io/Gourmet_Go_Buscador_de_Recetas/)
 
-Entregar una **única página estática** que muestre:
+## Descripción
 
-- Un encabezado claro y un **formulario de búsqueda** prominente.
-- Una **galería de recetas de ejemplo** utilizando cards de Bootstrap.
-- Un diseño **responsivo**, adaptado tanto a escritorio como a dispositivos móviles.
+GourmetGo es una Single Page Application (SPA) que permite al usuario buscar recetas de cocinas del mundo escribiendo un ingrediente en español o inglés. La app consulta la API pública TheMealDB sin recargar la página y muestra los resultados en tarjetas con animaciones de entrada, skeleton loaders y scroll automático a los resultados.
+El proyecto fue desarrollado en dos sprints:
 
-Este sprint está centrado en el **diseño visual y la maquetación**, no en la lógica funcional del buscador.
+Sprint 1 Maqueta estática, diseño visual y responsividad con Bootstrap 5
+Sprint 2 Conexión a API, async/await, manejo de errores y mejoras de UX
 
-## 🧩 Historias de Usuario Cubiertas
+---
 
-### HU-01: Interfaz Principal de Búsqueda
+## Tecnologías utilizadas
 
-- Título principal: **"Buscador de Recetas Italianas"**.
-- Formulario con:
-  - `<input>` de texto con placeholder descriptivo.
-  - `<button>` con texto claro **"Buscar"**.
-- Todos los elementos utilizan clases de **Bootstrap 5** para formulario y botones.
+HTML5 semántico Estructura de la página
+CSS3 + Variables CSS Diseño, animaciones y tema oscuro
+Bootstrap 5.3 Grid, navbar y utilidades responsivas
+JavaScript ES2022 Lógica, fetch, clases, AbortController
+TheMealDB API Fuente de recetas (pública, sin key)
+Google Fonts Cormorant Garamond + DM Sans
 
-### HU-02: Visualización de Recetas de Ejemplo
+---
 
-- Sección de resultados debajo del buscador: **"Recetas Clásicas Italianas"**.
-- 6 tarjetas de recetas **hard-codeadas** en `index.html`.
-- Cada tarjeta usa el componente **`card` de Bootstrap** e incluye:
-  - Imagen (`<img class="card-img-top">`).
-  - Título (`<h5 class="card-title">`).
-  - Botón de acción (`<a href="#" class="btn btn-italy">Ver receta</a>`).
+## Estructura del proyecto
 
-### HU-03: Experiencia en Dispositivos Móviles
+```
+Gourmet_Go_Buscador_de_Recetas/
+├── index.html          # Página principal
+├── assets/
+│   ├── css/
+│   │   └── style.css   # Estilos personalizados (tema, animaciones, cards)
+│   ├── js/
+│   │   └── main.js     # Lógica: API, traducción ES→EN, render DOM
+│   └── hero.jpg        # Imagen de fondo del hero
+└── README.md
+```
 
-- Diseño completamente **responsivo** utilizando el sistema de grillas de Bootstrap:
-  - `col-12` en móviles (1 columna).
-  - `col-md-6` en pantallas medianas (2 columnas).
-  - `col-lg-4` en escritorio (3 columnas).
-- Se ajusta el diseño del hero para mejorar la lectura en pantallas pequeñas.
+---
+
+## Instalación y uso
+
+Este proyecto es 100% estático: no requiere Node.js, npm ni ningún servidor de build.
+
+## Opción A — Abrir directamente (más rápido)
+
+```bash
+# 1. Clona el repositorio
+git clone https://github.com/TU_USUARIO/TU_REPO.git
+
+# 2. Entra a la carpeta
+cd Gourmet_Go_Buscador_de_Recetas
+
+# 3. Abre index.html en tu navegador
+open index.html          # macOS
+start index.html         # Windows
+xdg-open index.html      # Linux
+```
+
+## Opción B — Servidor local (recomendado para evitar restricciones CORS)
+
+Con VS Code + Live Server
+Instala la extensión Live Server
+Click derecho sobre `index.html` → Open with Live Server
+Con Python
+
+```bash
+python -m http.server 3000
+# Abre http://localhost:3000 en tu navegador
+```
+
+Con Node.js
+
+```bash
+npx serve .
+# Abre la URL que te indica la terminal
+```
+
+## Cómo usar el buscador
+
+Escribe un ingrediente en el campo de búsqueda (español o inglés)
+Ejemplos: `pollo`, `salmon`, `chocolate`, `pasta`
+Usa el autocompletado para ver sugerencias de TheMealDB
+Presiona Buscar — la página hace scroll automático a los resultados
+Haz click en Ver receta para abrir la receta completa en TheMealDB
+
+---
+
+## Funcionalidades destacadas
+
+Traducción ES → EN automática para más de 50 ingredientes comunes
+Skeleton loaders mientras se cargan los resultados
+AbortController — cancela fetches anteriores si el usuario busca rápido
+Scroll automático a resultados tras una búsqueda exitosa
+Sanitización de HTML dinámico para prevenir XSS
+Navbar adaptativa — transparente en el hero, sólida al hacer scroll
+Diseño responsive (mobile-first) con Bootstrap grid
+
+---
+
+## Historias de usuario implementadas
+
+HU-01 Interfaz principal con formulario de búsqueda visible 1
+HU-02 Galería de recetas con tarjetas (cards) 1
+HU-03 Diseño responsivo mobile-first 1
+HU-04 Búsqueda sin recarga de página (preventDefault) 2
+HU-05 Renderizado dinámico de resultados en el DOM 2
+HU-06 Mensaje de error cuando no hay resultados 2
+
+---
+
+## API utilizada
+
+TheMealDB — API pública gratuita de recetas.
+
+`filter.php?i={ingrediente}` Lista recetas por ingrediente
+`list.php?i=list` Lista todos los ingredientes (para autocompletado)
+No requiere API key. Documentación: themealdb.com/api.php
+
+---
+
+## Autor
+
+Pamela Gutierrez M
